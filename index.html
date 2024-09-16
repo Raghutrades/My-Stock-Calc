@@ -1,256 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trade Profit and Quotes</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #2e2e2e, #000000); /* Dark gradient background */
-            color: #fff;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        h2 {
-            margin-bottom: 20px;
-            font-size: 24px;
-            color: #fff;
-            font-weight: bold;
-        }
-
-        .container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            width: 100%;
-            max-width: 1200px;
-            justify-content: center;
-        }
-
-        .box {
-            background: rgba(255, 255, 255, 0.1); /* Semi-transparent light background */
-            padding: 20px;
-            border-radius: 15px; /* Rounded corners */
-            box-shadow: 0 4px 10px rgba(76, 175, 80, 0.5); /* Light green shadow */
-            position: relative;
-            overflow: hidden;
-            color: #fff;
-            transition: transform 0.3s ease-in-out;
-        }
-
-        .box:hover {
-            transform: scale(1.05); /* Slight zoom effect on hover */
-        }
-
-        .box::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: 2px solid rgba(76, 175, 80, 0.5); /* Light green border */
-            border-radius: 15px;
-            pointer-events: none;
-            box-sizing: border-box;
-            animation: borderGlow 3s infinite alternate;
-        }
-
-        @keyframes borderGlow {
-            from {
-                opacity: 0.5;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-
-        input[type="number"] {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 10px; /* Rounded corners */
-            font-size: 16px;
-        }
-
-        button {
-            padding: 10px;
-            width: 100%;
-            background-color: #4caf50; /* Vibrant green button color */
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
-        }
-
-        button:hover {
-            background-color: #45a049; /* Darker shade on hover */
-        }
-
-        p {
-            font-size: 16px;
-            margin: 10px 0;
-        }
-
-        #profitResult, #brokerageResult, #risk-reward-result {
-            font-weight: bold;
-        }
-
-        #profitResult.profit, #brokerageResult.profit, #risk-reward-result.profit {
-            color: lightgreen;
-        }
-
-        #profitResult.loss, #brokerageResult.loss, #risk-reward-result.loss {
-            color: red;
-        }
-
-        .questions-box ol {
-            margin: 0;
-            padding-left: 20px;
-        }
-
-        .questions-box li {
-            margin-bottom: 10px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock and Risk-Reward Calculator</title>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #e8f5e9; color: #333; }
+    h2 { color: #2e7d32; }
+    .container { max-width: 500px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; background-color: white; }
+    .form-group { margin-bottom: 10px; }
+    label { display: block; margin-bottom: 5px; }
+    input { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
+    button { background-color: #4caf50; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background-color: #388e3c; }
+    #result { margin-top: 20px; padding: 10px; border: 1px solid #4caf50; background-color: #f1f8e9; }
+  </style>
 </head>
 <body>
+  <div class="container">
+    <h2>Indian Stock Data and Risk-Reward Calculator</h2>
 
-<h2>Trade Profit & Quotes</h2>
-
-<div class="container">
-    <!-- Trade Profit and Brokerage Calculator -->
-    <div class="box calculator">
-        <h3>Trade Profit and Brokerage Calculator</h3>
-        <p id="date-time"></p>
-        <p id="days-remaining"></p>
-        <form>
-            Buy Price (₹): <input type="number" id="buyPrice" value="100">
-            Sell Price (₹): <input type="number" id="sellPrice" value="110">
-            Quantity: <input type="number" id="quantity" value="25">
-            <button type="button" onclick="calculateProfit()">Calculate</button>
-        </form>
-        <!-- Display Results -->
-        <p id="capital-required"></p>
-        <p id="profit" class="profit-output"></p>
-        <p id="brokerage-fee" class="brokerage-output"></p>
+    <!-- Stock Symbol Input -->
+    <div class="form-group">
+      <label for="stockSymbol">Enter Stock Symbol (e.g., RELIANCE.BSE):</label>
+      <input type="text" id="stockSymbol" placeholder="Enter Stock Symbol">
     </div>
+    <button onclick="fetchStockData()">Fetch Stock Data</button>
 
-    <!-- Quotes Box -->
-    <div class="box quote-box">
-        <p id="quote"></p>
-        <p id="author" class="author"></p>
-    </div>
+    <!-- Display Stock Data -->
+    <div id="stockData"></div>
 
-    <!-- Risk-Reward Ratio Calculator -->
-    <div class="box risk-reward-box">
-        <h3>Risk-Reward Ratio Calculator</h3>
-        <form>
-            Capital Invested (₹): <input type="number" id="capitalInvested" value="10000">
-            Target Profit (₹): <input type="number" id="targetProfit" value="2000">
-            Stop Loss (₹): <input type="number" id="stopLoss" value="500">
-            <button type="button" onclick="calculateRiskReward()">Calculate</button>
-        </form>
-        <p id="risk-reward-result"></p>
-    </div>
+    <h3>Buy/Sell Profit Calculator</h3>
+    <form id="buySellCalculator">
+      <div class="form-group">
+        <label for="stockPrice">Stock Price (₹):</label>
+        <input type="number" id="stockPrice" placeholder="Enter Stock Price">
+      </div>
+      <div class="form-group">
+        <label for="targetPrice">Target Price (₹):</label>
+        <input type="number" id="targetPrice" placeholder="Enter Target Price">
+      </div>
+      <div class="form-group">
+        <label for="stopLoss">Stop Loss (₹):</label>
+        <input type="number" id="stopLoss" placeholder="Enter Stop Loss">
+      </div>
+      <div class="form-group">
+        <label for="quantity">Quantity of Stocks:</label>
+        <input type="number" id="quantity" placeholder="Enter Quantity">
+      </div>
+      <button type="button" onclick="calculateProfit()">Calculate</button>
+    </form>
 
-    <!-- Questions Box -->
-    <div class="box questions-box">
-        <h3>Trading Questions</h3>
-        <ol>
-            <li>How are you going to calculate your position size?</li>
-            <li>How do you determine where to put your stop loss?</li>
-            <li>What is the minimum Risk: Reward ratio that you are willing to accept?</li>
-            <li>How many bad trades in 1 day before you walk away?</li>
-            <li>Where do you plan to journal your trades?</li>
-            <li>What is your morning routine?</li>
-            <li>What exchanges/markets are you going to trade?</li>
-            <li>Where are you going to get news about how those markets are doing?</li>
-            <li>Do you have a broad market watchlist and a sector watchlist setup so you can see how things are doing in the big picture?</li>
-            <li>Where are you going to check to see if there is any economic news happening today?</li>
-            <li>What indices are you going to look at to determine market direction?</li>
-            <li>What indicators are you going to use on your chart?</li>
-            <li>What are the main technical setups that you are going to be looking for?</li>
-            <li>Have you set time aside for you to review your trading performance and try to improve your trading plan?</li>
-        </ol>
-    </div>
-</div>
+    <!-- Display Results -->
+    <div id="result"></div>
+  </div>
 
-<script>
-    // Update current date and time
-    function updateTime() {
-        var now = new Date();
-        var options = { 
-            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', 
-            hour: '2-digit', minute: '2-digit', second: '2-digit' 
-        };
-        document.getElementById("date-time").innerHTML = now.toLocaleDateString('en-IN', options);
+  <script>
+    const apiKey = 'KL6VFNMG4NT63EMT';
+
+    // Fetch Stock Data from Alpha Vantage
+    function fetchStockData() {
+      const stockSymbol = document.getElementById('stockSymbol').value;
+      fetch(`https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${stockSymbol}&apikey=${apiKey}`)
+        .then(response => response.json())
+        .then(data => {
+          const timeSeries = data['Time Series (Daily)'];
+          const lastRefreshed = data['Meta Data']['3. Last Refreshed'];
+          const latestData = timeSeries[lastRefreshed];
+          
+          const stockDataHtml = `
+            <h4>Latest Stock Data for ${stockSymbol}</h4>
+            <p>Open: ₹${latestData['1. open']}</p>
+            <p>High: ₹${latestData['2. high']}</p>
+            <p>Low: ₹${latestData['3. low']}</p>
+            <p>Close: ₹${latestData['4. close']}</p>
+          `;
+          document.getElementById('stockData').innerHTML = stockDataHtml;
+        })
+        .catch(error => console.error('Error fetching stock data:', error));
     }
-    setInterval(updateTime, 1000);
 
-    // Calculate days remaining until December 31 of the current year
-    function updateDaysRemaining() {
-        var now = new Date();
-        var endOfYear = new Date(now.getFullYear(), 11, 31); // December 31 of the current year
-        var timeDiff = endOfYear - now;
-        var daysRemaining = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)); // converting milliseconds to days
-        document.getElementById("days-remaining").innerHTML = "Days remaining in " + now.getFullYear() + ": " + daysRemaining;
-    }
-    updateDaysRemaining();
-
-    // Random Quotes
-    const quotes = [
-        { text: "The stock market is filled with individuals who know the price of everything, but the value of nothing.", author: "Phillip Fisher" },
-        { text: "In trading and investing, it is not about how much you make but rather how much you don’t lose.", author: "Bernard Baruch" },
-        { text: "The goal of a successful trader is to make the best trades. Money is secondary.", author: "Alexander Elder" },
-        { text: "The stock market is designed to transfer money from the Active to the Patient.", author: "Warren Buffett" }
-    ];
-    function setRandomQuote() {
-        const quote = quotes[Math.floor(Math.random() * quotes.length)];
-        document.getElementById("quote").innerText = `"${quote.text}"`;
-        document.getElementById("author").innerText = `- ${quote.author}`;
-    }
-    setRandomQuote();
-
-    // Calculate Trade Profit
+    // Buy/Sell Profit Calculator
     function calculateProfit() {
-        var buyPrice = parseFloat(document.getElementById('buyPrice').value);
-        var sellPrice = parseFloat(document.getElementById('sellPrice').value);
-        var quantity = parseFloat(document.getElementById('quantity').value);
+      const stockPrice = parseFloat(document.getElementById('stockPrice').value);
+      const targetPrice = parseFloat(document.getElementById('targetPrice').value);
+      const stopLoss = parseFloat(document.getElementById('stopLoss').value);
+      const quantity = parseInt(document.getElementById('quantity').value);
 
-        var capitalRequired = buyPrice * quantity;
-        var totalSellPrice = sellPrice * quantity;
-        var profit = totalSellPrice - capitalRequired;
+      const capitalRequired = stockPrice * quantity;
+      const profitPotential = (targetPrice - stockPrice) * quantity;
+      const risk = (stockPrice - stopLoss) * quantity;
 
-        document.getElementById('capital-required').innerText = "Capital Required: ₹" + capitalRequired.toFixed(2);
-        document.getElementById('profit').innerText = "Profit: ₹" + profit.toFixed(2);
-        document.getElementById('profit').className = profit >= 0 ? 'profit' : 'loss';
+      const riskRewardRatio = profitPotential / risk;
 
-        var brokerageFee = 0.1 * profit; // assuming 0.1% brokerage fee
-        document.getElementById('brokerage-fee').innerText = "Brokerage Fee: ₹" + brokerageFee.toFixed(2);
-        document.getElementById('brokerage-fee').className = brokerageFee >= 0 ? 'profit' : 'loss';
+      const resultHtml = `
+        <p>Capital Required: ₹${capitalRequired}</p>
+        <p>Profit Potential: ₹${profitPotential}</p>
+        <p>Risk: ₹${risk}</p>
+        <p>Risk/Reward Ratio: ${riskRewardRatio.toFixed(2)}</p>
+      `;
+      document.getElementById('result').innerHTML = resultHtml;
     }
-
-    // Calculate Risk-Reward Ratio
-    function calculateRiskReward() {
-        var capitalInvested = parseFloat(document.getElementById('capitalInvested').value);
-        var targetProfit = parseFloat(document.getElementById('targetProfit').value);
-        var stopLoss = parseFloat(document.getElementById('stopLoss').value);
-
-        var riskRewardRatio = targetProfit / stopLoss;
-        document.getElementById('risk-reward-result').innerText = "Risk-Reward Ratio: " + riskRewardRatio.toFixed(2);
-        document.getElementById('risk-reward-result').className = riskRewardRatio >= 2 ? 'profit' : 'loss'; // Assuming 2 is the acceptable ratio
-        document.getElementById('risk-reward-result').innerHTML += riskRewardRatio >= 2 ? " (Acceptable)" : " (Not Acceptable)";
-    }
-</script>
-
+  </script>
 </body>
 </html>
