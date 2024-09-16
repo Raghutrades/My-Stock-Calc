@@ -3,179 +3,283 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Trading Netflix Style</title>
+    <title>Trade Profit and Quotes</title>
     <style>
         body {
-            background-color: #000;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #2e2e2e, #000000); /* Dark gradient background */
             color: #fff;
-            font-family: Arial, sans-serif;
-            text-align: center;
-            overflow: hidden;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-        .container {
-            padding: 50px;
-        }
-        .page {
-            display: none;
-        }
-        .active {
-            display: block;
-        }
-        .neon-border {
-            border: 3px solid #e50914;
-            box-shadow: 0px 0px 20px 5px #e50914;
-        }
-        .input-field {
-            margin: 15px 0;
-            padding: 10px;
-            width: 300px;
-            font-size: 18px;
-        }
-        .button {
-            background-color: #e50914;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-        }
-        .welcome-page, .result {
-            font-size: 24px;
-        }
-        .welcome-text {
-            font-size: 36px;
+
+        h2 {
             margin-bottom: 20px;
-            animation: glow 1.5s infinite;
+            font-size: 24px;
+            color: #fff;
+            font-weight: bold;
         }
-        @keyframes glow {
-            0% { text-shadow: 0 0 10px #e50914, 0 0 20px #e50914, 0 0 30px #e50914; }
-            100% { text-shadow: none; }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+            justify-content: center;
         }
-        .countdown {
-            font-size: 28px;
-            margin: 20px 0;
+
+        .box {
+            background: rgba(255, 255, 255, 0.1); /* Semi-transparent light background */
+            padding: 20px;
+            border-radius: 15px; /* Rounded corners */
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.5); /* Light green shadow */
+            border: 4px solid rgba(255, 255, 255, 0.2); /* White outer window-like border */
+            position: relative;
+            overflow: hidden;
+            color: #fff;
+            transition: transform 0.3s ease-in-out;
+            backdrop-filter: blur(5px); /* Window-like blurred background */
         }
-        .quote {
-            font-size: 20px;
-            margin-top: 10px;
+
+        /* Adding a "window" header to each box */
+        .box-header {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 10px;
+            color: #000;
+            font-weight: bold;
+            font-size: 14px;
+            border-bottom: 2px solid rgba(76, 175, 80, 0.5); /* Light green bottom border */
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            border-radius: 12px 12px 0 0;
         }
-        .link {
-            color: #e50914;
+
+        .box:hover {
+            transform: scale(1.05); /* Slight zoom effect on hover */
+        }
+
+        /* Expandable border glow effect */
+        .box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 4px solid rgba(76, 175, 80, 0.5); /* Light green border */
+            border-radius: 15px;
+            pointer-events: none;
+            box-sizing: border-box;
+            animation: borderGlow 3s infinite alternate;
+        }
+
+        @keyframes borderGlow {
+            from {
+                opacity: 0.5;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 10px; /* Rounded corners */
+            font-size: 16px;
+        }
+
+        button {
+            padding: 10px;
+            width: 100%;
+            background-color: #4caf50; /* Vibrant green button color */
+            color: #fff;
+            border: none;
+            border-radius: 5px;
             cursor: pointer;
-            text-decoration: underline;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049; /* Darker shade on hover */
+        }
+
+        p {
+            font-size: 16px;
+            margin: 10px 0;
+        }
+
+        #profitResult, #brokerageResult, #risk-reward-result {
+            font-weight: bold;
+        }
+
+        #profitResult.profit, #brokerageResult.profit, #risk-reward-result.profit {
+            color: lightgreen;
+        }
+
+        #profitResult.loss, #brokerageResult.loss, #risk-reward-result.loss {
+            color: red;
+        }
+
+        .questions-box ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .questions-box li {
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
 
-    <!-- Welcome Page -->
-    <div id="welcomePage" class="page active">
-        <div class="container">
-            <h1 class="welcome-text neon-border">🚀 Welcome to Your Trading Journey!</h1>
-            <div class="countdown neon-border" id="countdown"></div>
-            <div class="quote neon-border">"Opportunities don't happen, you create them."</div>
-            <div class="link" onclick="goToPage('calculatorPage')">Start Your Journey</div>
-        </div>
+<h2>Trade Profit & Quotes</h2>
+
+<div class="container">
+    <!-- Trade Profit and Brokerage Calculator -->
+    <div class="box calculator">
+        <div class="box-header">Trade Profit and Brokerage Calculator</div>
+        <p id="date-time"></p>
+        <p id="days-remaining"></p>
+        <form>
+            Buy Price (₹): <input type="number" id="buyPrice" value="100">
+            Sell Price (₹): <input type="number" id="sellPrice" value="110">
+            Quantity: <input type="number" id="quantity" value="25">
+            <button type="button" onclick="calculateProfit()">Calculate</button>
+        </form>
+        <!-- Display Results -->
+        <p id="capital-required"></p>
+        <p id="profit" class="profit-output"></p>
+        <p id="brokerage-fee" class="brokerage-output"></p>
     </div>
 
-    <!-- Calculator Page -->
-    <div id="calculatorPage" class="page">
-        <div class="container">
-            <h1 class="neon-border">📊 Intraday Risk Management Calculator</h1>
-            
-            <input type="number" class="input-field neon-border" id="capital" placeholder="Enter your Capital (₹)" />
-            <input type="number" class="input-field neon-border" id="riskPercentage" placeholder="Enter Risk Percentage (%)" />
-            <input type="number" class="input-field neon-border" id="entryPrice" placeholder="Entry Price (₹)" />
-            <input type="number" class="input-field neon-border" id="stopLossPrice" placeholder="Stop Loss Price (₹)" />
-            <button class="button neon-border" onclick="calculate()">Calculate</button>
-
-            <div class="result neon-border" id="result"></div>
-            <div class="link" onclick="goToPage('riskRewardPage')">Go to Risk/Reward Ratio</div>
-        </div>
+    <!-- Quotes Box -->
+    <div class="box quote-box">
+        <div class="box-header">Random Quote</div>
+        <p id="quote"></p>
+        <p id="author" class="author"></p>
     </div>
 
-    <!-- Risk Reward Page -->
-    <div id="riskRewardPage" class="page">
-        <div class="container">
-            <h1 class="neon-border">⚖️ Risk/Reward Ratio Calculator</h1>
-            
-            <input type="number" class="input-field neon-border" id="targetPrice" placeholder="Target Price (₹)" />
-            <button class="button neon-border" onclick="calculateRiskReward()">Calculate</button>
-
-            <div class="result neon-border" id="riskRewardResult"></div>
-            <div class="link" onclick="goToPage('questionsPage')">Next: Questions to Keep in Mind</div>
-        </div>
+    <!-- Risk-Reward Ratio Calculator -->
+    <div class="box risk-reward-box">
+        <div class="box-header">Risk-Reward Ratio Calculator</div>
+        <form>
+            Capital Invested (₹): <input type="number" id="capitalInvested" value="10000">
+            Target Profit (₹): <input type="number" id="targetProfit" value="2000">
+            Stop Loss (₹): <input type="number" id="stopLoss" value="500">
+            <button type="button" onclick="calculateRiskReward()">Calculate</button>
+        </form>
+        <p id="risk-reward-result"></p>
     </div>
 
-    <!-- Questions Page -->
-    <div id="questionsPage" class="page">
-        <div class="container">
-            <h1 class="neon-border">💡 Important Questions for Traders</h1>
-            <p class="neon-border">1. What's my risk/reward ratio?</p>
-            <p class="neon-border">2. Am I trading based on a plan or emotions?</p>
-            <p class="neon-border">3. Do I have a proper stop-loss strategy in place?</p>
-            <div class="link" onclick="goToPage('welcomePage')">Go Back to Start</div>
-        </div>
+    <!-- Questions Box -->
+    <div class="box questions-box">
+        <div class="box-header">Trading Questions</div>
+        <ol>
+            <li>How are you going to calculate your position size?</li>
+            <li>How do you determine where to put your stop loss?</li>
+            <li>What is the minimum Risk: Reward ratio that you are willing to accept?</li>
+            <li>How many bad trades in 1 day before you walk away?</li>
+            <li>Where do you plan to journal your trades?</li>
+            <li>What is your morning routine?</li>
+            <li>What exchanges/markets are you going to trade?</li>
+            <li>Where are you going to get news about how those markets are doing?</li>
+            <li>Do you have a broad market watchlist and a sector watchlist setup so you can see how things are doing in the big picture?</li>
+            <li>Where are you going to check to see if there is any economic news happening today?</li>
+            <li>What indices are you going to look at to determine market direction?</li>
+            <li>What indicators are you going to use on your chart?</li>
+            <li>What are the main technical setups that you are going to be looking for?</li>
+            <li>Have you set time aside for you to review your trading performance and try to improve your trading plan?</li>
+        </ol>
     </div>
+</div>
 
-    <script>
-        // Function to navigate between pages
-        function goToPage(pageId) {
-            document.querySelectorAll('.page').forEach(page => {
-                page.classList.remove('active');
-            });
-            document.getElementById(pageId).classList.add('active');
+<script>
+    // Update current date and time
+    function updateTime() {
+        var now = new Date();
+        var options = { 
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', 
+            hour: '2-digit', minute: '2-digit', second: '2-digit' 
+        };
+        document.getElementById("date-time").innerHTML = now.toLocaleDateString('en-IN', options);
+    }
+    setInterval(updateTime, 1000);
+
+    // Calculate days remaining until December 31 of the current year
+    function updateDaysRemaining() {
+        var now = new Date();
+        var endOfYear = new Date(now.getFullYear(), 11, 31); // December 31 of the current year
+        var timeDiff = endOfYear - now;
+        var daysRemaining = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)); // converting milliseconds to days
+        document.getElementById("days-remaining").innerHTML = daysRemaining + " days remaining in the year";
+    }
+    updateDaysRemaining();
+
+    // Random quote generator
+    const quotes = [
+        { quote: "The stock market is filled with individuals who know the price of everything, but the value of nothing.", author: "Philip Fisher" },
+        { quote: "An investment in knowledge pays the best interest.", author: "Benjamin Franklin" },
+        { quote: "The most important quality for an investor is temperament, not intellect.", author: "Warren Buffett" }
+    ];
+
+    function displayRandomQuote() {
+        var randomIndex = Math.floor(Math.random() * quotes.length);
+        document.getElementById("quote").innerHTML = `"${quotes[randomIndex].quote}"`;
+        document.getElementById("author").innerHTML = `- ${quotes[randomIndex].author}`;
+    }
+    displayRandomQuote();
+
+    // Trade Profit and Brokerage Calculation
+    function calculateProfit() {
+        const buyPrice = parseFloat(document.getElementById('buyPrice').value);
+        const sellPrice = parseFloat(document.getElementById('sellPrice').value);
+        const quantity = parseInt(document.getElementById('quantity').value);
+
+        if (isNaN(buyPrice) || isNaN(sellPrice) || isNaN(quantity)) {
+            alert("Please enter valid numbers.");
+            return;
         }
 
-        // Countdown Timer Function
-        function countdownTimer() {
-            const now = new Date();
-            const yearEnd = new Date(now.getFullYear(), 11, 31);
-            const timeRemaining = yearEnd - now;
+        const capitalRequired = buyPrice * quantity;
+        const profit = (sellPrice - buyPrice) * quantity;
+        const brokerageFee = profit * 0.01; // Assuming 1% brokerage fee
+        const netProfit = profit - brokerageFee;
 
-            const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+        document.getElementById('capital-required').innerText = `Capital Required: ₹${capitalRequired.toFixed(2)}`;
+        document.getElementById('profit').innerText = `Net Profit/Loss: ₹${netProfit.toFixed(2)}`;
+        document.getElementById('profit').className = netProfit >= 0 ? "profit" : "loss";
+        document.getElementById('brokerage-fee').innerText = `Brokerage Fee: ₹${brokerageFee.toFixed(2)}`;
+    }
 
-            document.getElementById('countdown').innerHTML = `⏳ ${days} Days ${hours} Hours ${minutes} Minutes ${seconds} Seconds Left in ${now.getFullYear()}`;
-        }
-        setInterval(countdownTimer, 1000);
+    // Risk-Reward Ratio Calculation
+    function calculateRiskReward() {
+        const capitalInvested = parseFloat(document.getElementById('capitalInvested').value);
+        const targetProfit = parseFloat(document.getElementById('targetProfit').value);
+        const stopLoss = parseFloat(document.getElementById('stopLoss').value);
 
-        // Calculation for Risk Management
-        function calculate() {
-            const capital = parseFloat(document.getElementById('capital').value);
-            const riskPercentage = parseFloat(document.getElementById('riskPercentage').value) / 100;
-            const entryPrice = parseFloat(document.getElementById('entryPrice').value);
-            const stopLossPrice = parseFloat(document.getElementById('stopLossPrice').value);
-
-            const riskAmount = capital * riskPercentage;
-            const stopLossDistance = entryPrice - stopLossPrice;
-            const positionSize = riskAmount / stopLossDistance;
-
-            document.getElementById('result').innerHTML = `
-                Risk Amount: ₹${riskAmount.toFixed(2)}<br>
-                Stop Loss Distance: ₹${stopLossDistance.toFixed(2)}<br>
-                Position Size: ${positionSize.toFixed(2)} Units
-            `;
+        if (isNaN(capitalInvested) || isNaN(targetProfit) || isNaN(stopLoss)) {
+            alert("Please enter valid numbers.");
+            return;
         }
 
-        // Risk/Reward Ratio Calculation
-        function calculateRiskReward() {
-            const entryPrice = parseFloat(document.getElementById('entryPrice').value);
-            const stopLossPrice = parseFloat(document.getElementById('stopLossPrice').value);
-            const targetPrice = parseFloat(document.getElementById('targetPrice').value);
+        const risk = stopLoss;
+        const reward = targetProfit;
+        const riskRewardRatio = (reward / risk).toFixed(2);
 
-            const riskPerTrade = entryPrice - stopLossPrice;
-            const rewardPerTrade = targetPrice - entryPrice;
-            const riskRewardRatio = rewardPerTrade / riskPerTrade;
+        document.getElementById('risk-reward-result').innerText = `Risk:Reward Ratio = ${riskRewardRatio}`;
+        document.getElementById('risk-reward-result').className = riskRewardRatio >= 1 ? "profit" : "loss";
+    }
+</script>
 
-            document.getElementById('riskRewardResult').innerHTML = `
-                Risk per Trade: ₹${riskPerTrade.toFixed(2)}<br>
-                Reward per Trade: ₹${rewardPerTrade.toFixed(2)}<br>
-                Risk/Reward Ratio: ${riskRewardRatio.toFixed(2)}
-            `;
-        }
-    </script>
 </body>
 </html>
